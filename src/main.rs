@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let output = collect_proxies().map(|proxies| {
             proxies
                 .iter()
-                .map(|proxy| format!("  * {} ({})", proxy.subject_name(), proxy.path()))
+                .map(|proxy| format!("  * {} ({})", proxy.target_name(), proxy.path()))
                 .collect::<String>()
         })?;
 
@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let subject = &args[1];
 
         let proxies = collect_proxies()?;
-        if let Some(proxy) = proxies.iter().find(|proxy| proxy.is_subject(subject)) {
+        if let Some(proxy) = proxies.iter().find(|proxy| proxy.is_target(subject)) {
             let mut child = proxy.start_process().spawn()?;
             let exit_status = child.wait()?;
 
@@ -94,7 +94,7 @@ impl Proxy {
         &self.1
     }
 
-    fn subject_name(&self) -> &str {
+    fn target_name(&self) -> &str {
         let name = self.file_name().trim_start_matches(PREFIX);
 
         if std::env::consts::OS == "windows" {
@@ -104,20 +104,13 @@ impl Proxy {
         }
     }
 
-    fn is_subject(&self, expected_name: &str) -> bool {
-        self.subject_name() == expected_name
+    fn is_target(&self, expected_name: &str) -> bool {
+        self.target_name() == expected_name
     }
 
     fn start_process(&self) -> Command {
-        // Tbd: we do this twice, one in main() and once here, so we don't have to inject
-        //  it again; should we?
-        let mut args = std::env::args().collect::<Vec<String>>();
-
-        // fake origin
-        args[0] = self.1.to_owned();
-
         let mut cmd = Command::new(&self.0);
-        cmd.args(std::env::args());
+        cmd.args(std::env::args().skip(1));
         cmd.stdin(Stdio::piped());
         cmd
     }
