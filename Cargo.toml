@@ -1,6 +1,7 @@
 [package]
 edition = "2018"
 name = "jsonlines"
+description = "Utilities to work with json lines"
 authors = ["Martijn Gribnau <garm@ilumeo.com>"]
 version = "0.0.0"
 license = "Apache-2.0"
