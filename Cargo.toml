@@ -7,6 +7,7 @@ version = "0.0.0"
 license = "Apache-2.0"
 keywords = ["jsonlines", "json", "tool", "jsonl"]
 categories = ["command-line-utilities"]
+repository = "https://github.com/foresterre/jsonlines"
 
 exclude = [
     ".idea/*",
