@@ -1,0 +1,24 @@
+[package]
+edition = "2018"
+name = "jsonlines"
+authors = ["Martijn Gribnau <garm@ilumeo.com>"]
+version = "0.0.0"
+license = "Apache-2.0"
+keywords = ["jsonlines", "json", "tool", "jsonl"]
+categories = ["command-line-utilities"]
+
+exclude = [
+    ".idea/*",
+    ".vscode/*",
+    "*.iml",
+]
+
+[package.metadata]
+msrv = "1.38.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+jsonl = "4.0.1"
+camino = "1.0.5"
+is_executable = "1.0.1"
