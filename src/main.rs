@@ -3,14 +3,16 @@ use is_executable::IsExecutable;
 use std::convert::TryFrom;
 use std::process::{Command, Stdio};
 
+const PATH: &str = "PATH";
+
 // TODO: prettify :D
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args().collect::<Vec<_>>();
 
     if args.len() >= 2 && &args[1] == "--list" {
-        let output = collect_proxies().map(|proxies| {
+        let output = collect_proxies_from_env(PATH).map(|proxies| {
             proxies
-                .iter()
+                .into_iter()
                 .map(|proxy| format!("  * {} ({})", proxy.target_name(), proxy.path()))
                 .collect::<String>()
         })?;
@@ -19,8 +21,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else if args.len() >= 2 {
         let subject = &args[1];
 
-        let proxies = collect_proxies()?;
-        if let Some(proxy) = proxies.iter().find(|proxy| proxy.is_target(subject)) {
+        let proxies = collect_proxies_from_env(PATH)?;
+        if let Some(proxy) = proxies.into_iter().find(|proxy| proxy.is_target(subject)) {
             let mut child = proxy.start_process().spawn()?;
             let exit_status = child.wait()?;
 
@@ -35,19 +37,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn collect_proxies() -> Result<Vec<Proxy>, Box<dyn std::error::Error>> {
-    let proxies = std::env::var("PATH")?;
+fn collect_proxies_from_env(path: &str) -> Result<impl IntoIterator<Item = Proxy>, Error> {
+    collect_path_env(path).map(|v| collect_proxies(v.into_iter()))
+}
 
-    let proxies = proxies
+fn collect_path_env(var: &str) -> Result<impl IntoIterator<Item = Utf8PathBuf>, Error> {
+    let proxies = std::env::var(var).map_err(Error::EnvironmentError)?;
+
+    Ok(proxies
         .as_str()
         .split(";")
         .map(Utf8PathBuf::from)
-        .collect::<Vec<Utf8PathBuf>>();
+        .collect::<Vec<Utf8PathBuf>>())
+}
 
-    Ok(proxies
-        .iter()
-        .flat_map(find_binaries)
-        .collect::<Vec<Proxy>>())
+fn collect_proxies<P: AsRef<Utf8Path>>(
+    paths: impl Iterator<Item = P>,
+) -> impl IntoIterator<Item = Proxy> {
+    paths.flat_map(find_binaries).collect::<Vec<Proxy>>()
 }
 
 const PREFIX: &str = "jsonlines-";
@@ -114,4 +121,10 @@ impl Proxy {
         cmd.stdin(Stdio::piped());
         cmd
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("{0}")]
+    EnvironmentError(std::env::VarError),
 }
