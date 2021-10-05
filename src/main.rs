@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })?;
 
         eprintln!("Available proxies:\n{}", output);
-    } else if args.len() == 2 {
+    } else if args.len() >= 2 {
         let subject = &args[1];
 
         let proxies = collect_proxies()?;
