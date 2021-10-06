@@ -118,7 +118,7 @@ impl Proxy {
     fn start_process(&self) -> Command {
         let mut cmd = Command::new(&self.0);
         cmd.args(std::env::args().skip(1));
-        cmd.stdin(Stdio::piped());
+        cmd.stdin(Stdio::inherit());
         cmd
     }
 }
